@@ -1,46 +1,55 @@
+import os
+import pickle
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 
-c1 = 1 # Ratio of survival rate of H to P queens (used in queen fights within clusters)
-c2 = 1 # Ratio of contribution of H to P queens (not currently used)
-c3 = 1 # Ratio of reproductive capabilities of H to P queens (used in reproduction)
-sc = 0.5 # Survival rate of P queens (used in queen fights within clusters)
+# TODO Update Overleaf
+# TODO Presentation on effects of ci on dynamics (show average steady states as a function of c1, c2, c3)
+
+#c1 = 1 # Ratio of survival rate of S to C queens (used in queen fights)
+#c2 = 1 # Ratio of contribution of S to C queens (used in cluster fights)
+#c3 = 1 # Ratio of reproductive capabilities of S to C queens (used in reproduction)
+sc = 0.5 # Survival rate of C queens (used in queen fights)
 
 s2 = 1 # Reproductive variance (sigma^2) (used in reproduction)
 
-sims = 30 # Number of simulations to run and average
-gens = 200 # Number of generations to simulate
+sims = 50 # Number of simulations to run and average
+gens = 500 # Number of generations to simulate
+
+save_file = 'steady_states_5.dat' # Specify where we want to save the data
 
 class Cluster():
-    def __init__(self, i, j):
+    def __init__(self, i, j, c):
         self.i = i
         self.j = j
         self.qc = 0 # Number of cooperative queens
         self.qs = 0 # Number of solitary queens
+        self.c = c
 
     def potential(self):
-        xi = self.qc + self.qs
+        xi = self.qc + self.qs * self.c[1]
         return -2.88 + 4.28 * xi - 0.377 * (xi ** 2)
 
     def queen_fight(self, Cm = 5):
-        while (self.qc + self.qs) > Cm:
+        while (self.qc + self.qs) >= Cm:
             self.qc = int(self.qc * sc)
-            self.qs = int(self.qs * sc * c1)
+            self.qs = int(self.qs * sc * self.c[0])
 
 class Landscape():
-    def __init__(self, K, m, n):
+    def __init__(self, K, m, n, c):
         '''K: size of individual clusters (int)
            m x n: size of grid of clusters (int) (int)
            p: probability a queen is cooperative (double 0-1)'''
         self.K = K
         self.m = m
         self.n = n
+        self.c = c
         self.clusters = []
         for i in range(m):
             new_row = []
             for j in range(n):
-                new_row.append(Cluster(i, j))
+                new_row.append(Cluster(i, j, self.c))
             self.clusters.append(new_row)
 
     def create_queens(self, qc = 0, qs = 0):
@@ -113,32 +122,34 @@ class Landscape():
         for row in self.clusters:
             for cluster in row:
                 while cluster.qc > 0:
-                    C += max(0, np.random.normal(1, s2))
+                    C += max(0, np.random.normal(1.5, s2))
                     #C += np.random.normal(1, s2)
                     cluster.qc -= 1
                 while cluster.qs > 0:
-                    S += max(0, np.random.normal(1, s2*c3))
+                    S += max(0, np.random.normal(1.5, s2*self.c[2]))
                     #S += np.random.normal(1, s2*c3)
                     cluster.qs -= 1
         self.create_queens(qc = int(C), qs = int(S))
 
 if __name__ == '__main__':
 
+    run = False
+
     m, n = 5, 5
     scale = 100
-    win = pygame.display.set_mode((m * scale + 2, int((n + 0.5) * scale + 2)))
-    pygame.display.set_caption('Ant Nest Simulator')
-    pygame.font.init()
-    font = pygame.font.SysFont('Calibri', int(scale / 5))
+    if run:
+        win = pygame.display.set_mode((m * scale + 2, int((n + 0.5) * scale + 2)))
+        pygame.display.set_caption('Ant Nest Simulator')
+        pygame.font.init()
+        font = pygame.font.SysFont('Calibri', int(scale / 5))
 
-    land = Landscape(K = 30, m = m, n = n)
-    land.create_queens(qc = 50, qs = 50)
+    land = Landscape(K = 30, m = m, n = n, c = [1, 1, 1])
+    land.create_queens(qc = 100, qs = 100)
 
     with_cluster_fights = True
     step = 0 # 0: queen fight, 1: cluster fight, 2: reproduce
 
     generation = 0
-    run = True
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -186,44 +197,76 @@ if __name__ == '__main__':
         win.blit(font.render('Q: ' + str(land.queen_count()), False, (0, 0, 0)), (3.7*scale, (n+0.2)*scale))
         pygame.display.update()
 
-    '''qc_count_average = []
-    qs_count_average = []
-    qc_proportion_average = []
-    qs_proportion_average = []
+    c1vals = []
+    c2vals = []
+    c3vals = []
+    csteadystates = []
+    ssteadystates = []
 
-    for i in range(sims):
-        print('Simulation', i + 1)
-        land = Landscape(K = 30, m = m, n = n)
-        land.create_queens(qc = 20, qs = 20)
+    for c1 in np.linspace(0.5, 1, 1):
+        for c2 in np.linspace(1, 1, 1):
+            for c3 in np.linspace(1, 1, 1):
+                print('c1:', c1, 'c2:', c2, 'c3:', c3)
+                qc_count_average = []
+                qs_count_average = []
 
-        qc_counts = []
-        qs_counts = []
-        qc_proportions = []
-        qs_proportions = []
+                for i in range(sims):
+                    print('Simulation', i + 1)
+                    land = Landscape(K = 10, m = m, n = n, c = [c1, c2, c3])
+                    land.create_queens(qc = 50, qs = 50)
 
-        for j in range(gens):
-            qc, qs = land.queen_count()
-            qc_counts.append(qc)
-            qs_counts.append(qs)
-            #qc_proportions.append(qc / (qc+qs))
-            #qs_proportions.append(qs / (qc+qs))
+                    qc_counts = []
+                    qs_counts = []
 
-            land.queen_fight()
-            #print(land.queen_count())
+                    for j in range(gens):
+                        qc, qs = land.queen_count()
+                        qc_counts.append(qc)
+                        qs_counts.append(qs)
 
-            #land.cluster_fight()
-            #print(land.queen_count())
+                        land.queen_fight()
+                        land.cluster_fight()
+                        land.reproduce()
+                    
+                    qc_count_average.append(np.array(qc_counts))
+                    qs_count_average.append(np.array(qs_counts))
+                
+                s_steadystate = np.mean(np.mean(qs_count_average, axis = 0)[-50:])
+                c_steadystate = np.mean(np.mean(qc_count_average, axis = 0)[-50:])
+                
+                print('Solitary Steady State:', s_steadystate)
+                print('Cooperative Steady State:', c_steadystate)
+                print()
 
-            land.reproduce()
-            #print(land.queen_count())
-        
-        qc_count_average.append(np.array(qc_counts))
-        qs_count_average.append(np.array(qs_counts))
-        #qc_proportion_average.append(qc_proportions)
-        #qs_proportion_average.append(qs_proportions)
-    
+                c1vals.append(c1)
+                c2vals.append(c2)
+                c3vals.append(c3)
+                ssteadystates.append(s_steadystate)
+                csteadystates.append(c_steadystate)
+                
+    '''fig = plt.figure()
+    ax = fig.add_subplot(121, projection='3d')
+    ax.set_title('Solitary Steady States')
+    ax.set_xlabel('c1')
+    ax.set_ylabel('c2')
+    ax.set_zlabel('c3')
+    img = ax.scatter(c1vals, c2vals, c3vals, c = ssteadystates, cmap = plt.hot())
+    fig.colorbar(img)
 
-    # TODO Make visualizations for these over time
+    ax = fig.add_subplot(122, projection='3d')
+    ax.set_title('Cooperative Steady States')
+    ax.set_xlabel('c1')
+    ax.set_ylabel('c2')
+    ax.set_zlabel('c3')
+    img = ax.scatter(c1vals, c2vals, c3vals, c = csteadystates, cmap = plt.hot())
+    fig.colorbar(img)
+
+    with open(os.path.dirname(__file__) + '/data/' + save_file, 'wb') as f:
+        pickle.dump(c1vals, f)
+        pickle.dump(c2vals, f)
+        pickle.dump(c3vals, f)
+        pickle.dump(ssteadystates, f)
+        pickle.dump(csteadystates, f)'''
+
     # Ratio on the whole landscape
     # Ratio in inidividual colonies
 
@@ -232,11 +275,4 @@ if __name__ == '__main__':
     plt.xlabel('Generations')
     plt.ylabel('Number of Queens')
     plt.legend()
-    plt.show()'''
-
-    '''plt.plot(np.arange(gens), qc_proportions, label = 'Cooperative')
-    plt.plot(np.arange(gens), qs_proportions, label = 'Solitary')
-    plt.xlabel('Generations')
-    plt.ylabel('Proportion of Landscape')
-    plt.legend()
-    plt.show()'''
+    plt.show()
