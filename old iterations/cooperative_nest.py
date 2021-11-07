@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 #c1 = 1 # Ratio of survival rate of S to C queens (used in queen fights)
 #c2 = 1 # Ratio of contribution of S to C queens (used in cluster fights)
 #c3 = 1 # Ratio of reproductive capabilities of S to C queens (used in reproduction)
+
 sc = 0.5 # Survival rate of C queens (used in queen fights)
 
 s2 = 1 # Reproductive variance (sigma^2) (used in reproduction)

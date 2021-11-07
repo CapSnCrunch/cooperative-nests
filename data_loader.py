@@ -16,20 +16,20 @@ with open(os.path.dirname(__file__) + '/data/' + save_file, 'rb') as f:
 c1vals, c2vals, c3vals, ssteadystates, csteadystates = data
 
 fig = plt.figure()
-ax = fig.add_subplot(121, projection='3d')
-ax.set_title('Solitary Steady States')
+ax = fig.add_subplot(111, projection='3d')
+ax.set_title('Ratio of C to S Steady States')
 ax.set_xlabel('c1')
 ax.set_ylabel('c2')
 ax.set_zlabel('c3')
-img = ax.scatter(c1vals, c2vals, c3vals, c = ssteadystates, cmap = plt.viridis())
+img = ax.scatter(c1vals, c2vals, c3vals, c = np.array(csteadystates) / (np.array(ssteadystates) + 1), cmap = plt.viridis())
 fig.colorbar(img)
 
-ax = fig.add_subplot(122, projection='3d')
+'''ax = fig.add_subplot(122, projection='3d')
 ax.set_title('Cooperative Steady States')
 ax.set_xlabel('c1')
 ax.set_ylabel('c2')
 ax.set_zlabel('c3')
 img = ax.scatter(c1vals, c2vals, c3vals, c = csteadystates, cmap = plt.viridis())
-fig.colorbar(img)
+fig.colorbar(img)'''
 
 plt.show()
