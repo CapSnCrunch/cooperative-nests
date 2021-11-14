@@ -10,20 +10,28 @@ import matplotlib.pyplot as plt
 # Ratio on the whole landscape
 # Ratio in inidividual colonies
 
-c1 = 1 # Ratio of mortality rates (dc / ds) (used in queen fights)
-ds = 0.6 # Mortality rate of solitary queens
-c2 = 1 # Ratio of interspecific competition ability (csc / ccs) (used in cluster fights)
-ccs = 0.8 # Interspecific competition ability of cooperative queens
-c3 = 1 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
-rc = 0.8 # Reproductive ability of cooperative queens
+c1 = 0.8 # Ratio of mortality rates (dc / ds) (used in queen fights)
+ds = 0.2 # Mortality rate of solitary queens
+c2 = 0.99 # Ratio of interspecific competition ability (csc / ccs) (used in cluster fights)
+ccs = 0.7 # Interspecific competition ability of cooperative queens
+c3 = 0.6 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
+rc = 0.4 # Reproductive ability of cooperative queens
 sigma = 1 # Reproductive variance (sigma^2) (used in reproduction)
+
+K = 25
+m, n = 5, 5
+qc0, qs0 = 50, 50
 
 # Wrap constants into a dictionary
 consts = {'c1':c1, 'ds':ds, 'c2':c2, 'ccs':ccs, 'c3':c3, 'rc':rc, 'sigma':sigma}
 print('consts', consts)
+print('ccs / ds:', ccs / ds)
+print('1 / c3:', 1 / c3)
+print('c1c2 / c3:', c1*c2 / c3)
 
-sims = 50 # Number of simulations to run and average
-gens = 500 # Number of generations to simulate
+
+sims = 10 # Number of simulations to run and average
+gens = 300 # Number of generations to simulate
 
 datanum = 0
 save_file = 'nest-' + str(datanum) + '.dat' # Specify where we want to save the data
@@ -125,10 +133,10 @@ class Landscape():
         for row in self.clusters:
             for cluster in row:
                 while cluster.qc > 0:
-                    QC += max(0, np.random.normal(1.5 * self.consts['rc'], self.consts['sigma']))
+                    QC += max(0, np.random.normal(50 * self.consts['rc'], self.consts['sigma']))
                     cluster.qc -= 1
                 while cluster.qs > 0:
-                    QS += max(0, np.random.normal(1.5 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
+                    QS += max(0, np.random.normal(50 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
                     cluster.qs -= 1
         self.create_queens(qc = int(QC), qs = int(QS))
 
@@ -137,7 +145,6 @@ if __name__ == '__main__':
     ################# SIGNLE STEP SIMULATION #################
     run = False
 
-    m, n = 5, 5
     scale = 100
     if run:
         win = pygame.display.set_mode((m * scale + 2, int((n + 0.5) * scale + 2)))
@@ -145,8 +152,8 @@ if __name__ == '__main__':
         pygame.font.init()
         font = pygame.font.SysFont('Calibri', int(scale / 5))
 
-    land = Landscape(K = 10, m = m, n = n, consts = consts)
-    land.create_queens(qc = 100, qs = 100)
+    land = Landscape(K = K, m = m, n = n, consts = consts)
+    land.create_queens(qc = qc0, qs = qs0)
 
     with_cluster_fights = True
     step = 0 # 0: queen fight, 1: cluster fight, 2: reproduce
@@ -205,8 +212,8 @@ if __name__ == '__main__':
 
     for i in range(sims):
         print('Simulation', i + 1)
-        land = Landscape(K = 10, m = 10, n = 10, consts = consts)
-        land.create_queens(qc = 100, qs = 100)
+        land = Landscape(K = K, m = m, n = n, consts = consts)
+        land.create_queens(qc = qc0, qs = qs0)
 
         qc_counts = []
         qs_counts = []
@@ -233,5 +240,6 @@ if __name__ == '__main__':
     plt.show()
 
     with open(os.path.dirname(__file__) + '/data/' + save_file, 'wb') as f:
-        pickle.dump(qc_counts)
-        pickle.dump(qs_counts)
+        pickle.dump(consts, f)
+        pickle.dump(qc_count_average, f)
+        pickle.dump(qs_count_average, f)
