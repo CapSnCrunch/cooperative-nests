@@ -10,12 +10,12 @@ import matplotlib.pyplot as plt
 # Ratio on the whole landscape
 # Ratio in inidividual colonies
 
-c1 = 0.8 # Ratio of mortality rates (dc / ds) (used in queen fights)
-ds = 0.2 # Mortality rate of solitary queens
-c2 = 0.99 # Ratio of interspecific competition ability (csc / ccs) (used in cluster fights)
-ccs = 0.7 # Interspecific competition ability of cooperative queens
-c3 = 0.6 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
-rc = 0.4 # Reproductive ability of cooperative queens
+c1 = 1 # Ratio of mortality rates (dc / ds) (used in queen fights)
+ds = 0.6 # Mortality rate of solitary queens
+c2 = 0.1 # Ratio of interspecific competition ability (csc / ccs) (used in cluster fights)
+ccs = 0.8 # Interspecific competition ability of cooperative queens
+c3 = 1 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
+rc = 0.8 # Reproductive ability of cooperative queens
 sigma = 1 # Reproductive variance (sigma^2) (used in reproduction)
 
 K = 25
@@ -29,15 +29,11 @@ print('ccs / ds:', ccs / ds)
 print('1 / c3:', 1 / c3)
 print('c1c2 / c3:', c1*c2 / c3)
 
-
-sims = 10 # Number of simulations to run and average
-gens = 300 # Number of generations to simulate
+sims = 50 # Number of simulations to run and average
+gens = 500 # Number of generations to simulate
 
 datanum = 0
-save_file = 'nest-' + str(datanum) + '.dat' # Specify where we want to save the data
-while exists(os.path.dirname(__file__) + '/data/' + save_file):
-    datanum += 1
-    save_file = 'nest-' + str(datanum) + '.dat'
+#save_file = 'nest-' + str(datanum) # Specify where we want to save the data
 
 class Cluster():
     def __init__(self, i, j, consts):
@@ -138,7 +134,42 @@ class Landscape():
                 while cluster.qs > 0:
                     QS += max(0, np.random.normal(50 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
                     cluster.qs -= 1
+        #print(QC, QS)
         self.create_queens(qc = int(QC), qs = int(QS))
+
+def gather_data(consts, savefile):
+
+    qc_count_average = []
+    qs_count_average = []
+
+    for i in range(sims):
+        #if i % 10 == 0:
+        #    print('Simulation', i)
+        print('Simulation', i)
+        land = Landscape(K = K, m = m, n = n, consts = consts)
+        land.create_queens(qc = qc0, qs = qs0)
+
+        qc_counts = []
+        qs_counts = []
+
+        for j in range(gens):
+            # Record queen counts for i-th generation
+            qc, qs = land.queen_count()
+            qc_counts.append(qc)
+            qs_counts.append(qs)
+
+            # Simulate i-th generation
+            land.queen_fight()
+            land.cluster_fight()
+            land.reproduce()
+        
+        qc_count_average.append(np.array(qc_counts))
+        qs_count_average.append(np.array(qs_counts))
+
+    with open(os.path.dirname(__file__) + '/auto-data/' + savefile + '.dat', 'wb') as f:
+        pickle.dump(consts, f)
+        pickle.dump(qc_count_average, f)
+        pickle.dump(qs_count_average, f)
 
 if __name__ == '__main__':
 
@@ -207,39 +238,35 @@ if __name__ == '__main__':
         pygame.display.update()
 
     ################# GATHER 3D DATA #################
-    qc_count_average = []
-    qs_count_average = []
+    # ~2min per simulations
+    for a in np.linspace(1, 3, 3):
+        for b in np.linspace(1, 3, 3):
+            for c in np.linspace(1, 3, 3):
+                
+                print()
+                consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
 
-    for i in range(sims):
-        print('Simulation', i + 1)
-        land = Landscape(K = K, m = m, n = n, consts = consts)
-        land.create_queens(qc = qc0, qs = qs0)
+                '''savefile = ''
+                vals = [consts[c] for c in list(consts.keys())]
+                for i in range(len(vals)):
+                    savefile += str(vals[i])
+                    if i < len(vals) - 1:
+                        savefile += ","'''
 
-        qc_counts = []
-        qs_counts = []
+                savefile = str(a) + ',' + str(b) + ',' + str(c)
 
-        for j in range(gens):
-            # Record queen counts for i-th generation
-            qc, qs = land.queen_count()
-            qc_counts.append(qc)
-            qs_counts.append(qs)
+                '''datanum = 0
+                while exists(os.path.dirname(__file__) + '/data/' + savefile):
+                    datanum += 1
+                savefile += '-' + str(datanum)'''
+                
+                print('SAVEFILE', savefile)
+                print('CONSTANTS', consts)
 
-            # Simulate i-th generation
-            land.queen_fight()
-            land.cluster_fight()
-            land.reproduce()
-        
-        qc_count_average.append(np.array(qc_counts))
-        qs_count_average.append(np.array(qs_counts))
-    
-    plt.plot(np.arange(gens), np.mean(qc_count_average, axis = 0), label = 'Cooperative')
-    plt.plot(np.arange(gens), np.mean(qs_count_average, axis = 0), label = 'Solitary')
-    plt.xlabel('Generations')
-    plt.ylabel('Number of Queens')
-    plt.legend()
-    plt.show()
-
-    with open(os.path.dirname(__file__) + '/data/' + save_file, 'wb') as f:
-        pickle.dump(consts, f)
-        pickle.dump(qc_count_average, f)
-        pickle.dump(qs_count_average, f)
+                try:
+                    gather_data(consts, savefile)
+                except:
+                    with open(os.path.dirname(__file__) + '/auto-data/error-log.txt', 'w') as f:
+                        f.write(savefile + '\n')
+                        f.write(str(consts) + '\n')
+                        f.write('\n')
