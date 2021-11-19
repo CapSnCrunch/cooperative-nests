@@ -242,7 +242,7 @@ if __name__ == '__main__':
     for a in np.linspace(1, 3, 3):
         for b in np.linspace(1, 3, 3):
             for c in np.linspace(1, 3, 3):
-                
+
                 print()
                 consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
 
