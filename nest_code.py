@@ -166,7 +166,7 @@ def gather_data(consts, savefile):
         qc_count_average.append(np.array(qc_counts))
         qs_count_average.append(np.array(qs_counts))
 
-    with open(os.path.dirname(__file__) + '/auto-data/' + savefile + '.dat', 'wb') as f:
+    with open(os.path.dirname(__file__) + '/auto-data2/' + savefile + '.dat', 'wb') as f:
         pickle.dump(consts, f)
         pickle.dump(qc_count_average, f)
         pickle.dump(qs_count_average, f)
@@ -239,9 +239,9 @@ if __name__ == '__main__':
 
     ################# GATHER 3D DATA #################
     # ~2min per simulations
-    for a in np.linspace(1, 3, 3):
-        for b in np.linspace(1, 3, 3):
-            for c in np.linspace(1, 3, 3):
+    for a in np.linspace(0.5, 2, 4):
+        for b in np.linspace(1.5, 3, 4):
+            for c in np.linspace(0.5, 2, 4):
 
                 print()
                 consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
@@ -253,20 +253,19 @@ if __name__ == '__main__':
                     if i < len(vals) - 1:
                         savefile += ","'''
 
-                savefile = str(a) + ',' + str(b) + ',' + str(c)
-
                 '''datanum = 0
                 while exists(os.path.dirname(__file__) + '/data/' + savefile):
                     datanum += 1
                 savefile += '-' + str(datanum)'''
                 
-                print('SAVEFILE', savefile)
-                print('CONSTANTS', consts)
-
                 try:
+                    savefile = str(a)[:3] + ',' + str(b)[:3] + ',' + str(c)[:3]
+                    print('SAVEFILE', savefile)
+                    print('CONSTANTS', consts)
                     gather_data(consts, savefile)
                 except:
-                    with open(os.path.dirname(__file__) + '/auto-data/error-log.txt', 'w') as f:
+                    print("ERROR")
+                    with open(os.path.dirname(__file__) + '/auto-data2/error-log.txt', 'w') as f:
                         f.write(savefile + '\n')
                         f.write(str(consts) + '\n')
                         f.write('\n')

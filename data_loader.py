@@ -18,7 +18,7 @@ save_file = str(a) + ',' + str(b) + ',' + str(c) + '.dat' # Specify which file w
 print(save_file)
 
 data = [] # Data saved as consts, qccounts, qscounts
-with open(os.path.dirname(__file__) + '/auto-data/' + save_file, 'rb') as f:
+with open(os.path.dirname(__file__) + '/auto-data2/' + save_file, 'rb') as f:
     while True:
         try:
             data.append(pickle.load(f))
