@@ -18,22 +18,28 @@ c3 = 1 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
 rc = 0.8 # Reproductive ability of cooperative queens
 sigma = 1 # Reproductive variance (sigma^2) (used in reproduction)
 
-K = 25
+K = 15
 m, n = 5, 5
 qc0, qs0 = 50, 50
 
+# TODO Get rid of ratios (although they work for ODE, changing things like c1 will drastically change results)
+# Make choices for ratio values
+#a = 3.0 # ccs / ds
+#b = 1.0 # 1 / c3
+#c = 2.0 # c1c2 / c3
+
 # Wrap constants into a dictionary
-consts = {'c1':c1, 'ds':ds, 'c2':c2, 'ccs':ccs, 'c3':c3, 'rc':rc, 'sigma':sigma}
-print('consts', consts)
-print('ccs / ds:', ccs / ds)
-print('1 / c3:', 1 / c3)
-print('c1c2 / c3:', c1*c2 / c3)
+#consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
+consts = {'c1':0.5, 'ds':0.38, 'c2':0.5, 'ccs':0.38, 'c3':0.5, 'rc':0.55, 'sigma':1}
+# c1 in [0.6, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
+# ds = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
+# c2 in [0.6, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
+# ccs = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
+# c3 in [0.6, 1] 'Ecological drivers ... ' (Brian Haney)
+# rc = 0.65 'Ecological drivers ... ' (Brian Haney)
 
-sims = 50 # Number of simulations to run and average
-gens = 500 # Number of generations to simulate
-
-datanum = 0
-#save_file = 'nest-' + str(datanum) # Specify where we want to save the data
+sims = 10 # Number of simulations to run and average
+gens = 200 # Number of generations to simulate
 
 class Cluster():
     def __init__(self, i, j, consts):
@@ -166,7 +172,7 @@ def gather_data(consts, savefile):
         qc_count_average.append(np.array(qc_counts))
         qs_count_average.append(np.array(qs_counts))
 
-    with open(os.path.dirname(__file__) + '/auto-data2/' + savefile + '.dat', 'wb') as f:
+    with open(os.path.dirname(__file__) + '/data3/' + savefile + '.dat', 'wb') as f:
         pickle.dump(consts, f)
         pickle.dump(qc_count_average, f)
         pickle.dump(qs_count_average, f)
@@ -174,7 +180,7 @@ def gather_data(consts, savefile):
 if __name__ == '__main__':
 
     ################# SIGNLE STEP SIMULATION #################
-    run = False
+    run = False # Set to true if you want to see explicitly what is happening at each step of the simulation
 
     scale = 100
     if run:
@@ -237,35 +243,77 @@ if __name__ == '__main__':
         win.blit(font.render('Q: ' + str(land.queen_count()), False, (0, 0, 0)), (3.7*scale, (n+0.2)*scale))
         pygame.display.update()
 
-    ################# GATHER 3D DATA #################
+    ################# RUN A SINGLE SIMULATION #################
+    if False:
+        print('consts:', consts)
+        qc_count_average = [] # Qc over time for each simulation
+        qs_count_average = [] # Qs over time for each simulation
+
+        for i in range(sims):
+            print('Simulation', i)
+            land = Landscape(K = K, m = m, n = n, consts = consts)
+            land.create_queens(qc = qc0, qs = qs0)
+
+            qc_counts = [] # Qc at each generation
+            qs_counts = [] # Qs at each generation
+
+            for j in range(gens):
+                # Record queen counts for i-th generation
+                qc, qs = land.queen_count()
+                qc_counts.append(qc)
+                qs_counts.append(qs)
+
+                # Simulate i-th generation
+                land.queen_fight()
+                land.cluster_fight()
+                land.reproduce()
+            
+            qc_count_average.append(np.array(qc_counts))
+            qs_count_average.append(np.array(qs_counts))
+
+        qc_levels = []
+        qs_levels = []
+        for i in range(len(qc_count_average)):
+            qc_levels.append(np.mean(qc_count_average[i][-50:]))
+            qs_levels.append(np.mean(qs_count_average[i][-50:]))
+
+        plt.plot(np.arange(len(qc_count_average[0])), np.mean(qc_count_average, axis = 0), label = 'Cooperative')
+        plt.plot(np.arange(len(qs_count_average[0])), np.mean(qs_count_average, axis = 0), label = 'Solitary')
+        plt.xlabel('Generations')
+        plt.ylabel('Number of Queens')
+        plt.legend()
+        plt.show()
+
+    ################# GATHER DATA IN RANGE TO COMPARE WITH ODE MODEL #################
     # ~2min per simulations
-    for a in np.linspace(0.5, 2, 4):
-        for b in np.linspace(1.5, 3, 4):
-            for c in np.linspace(0.5, 2, 4):
+    if True:
+        for c1 in np.linspace(0.6, 1.0, 4):
+            for c2 in np.linspace(0.6, 1, 4):
+                for c3 in np.linspace(0.6, 1, 4):
 
-                print()
-                consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
+                    print()
+                    consts = {'c1':c1, 'ds':0.38, 'c2':c2, 'ccs':0.38, 'c3':c3, 'rc':0.65, 'sigma':1}
 
-                '''savefile = ''
-                vals = [consts[c] for c in list(consts.keys())]
-                for i in range(len(vals)):
-                    savefile += str(vals[i])
-                    if i < len(vals) - 1:
-                        savefile += ","'''
+                    '''savefile = ''
+                    vals = [consts[c] for c in list(consts.keys())]
+                    for i in range(len(vals)):
+                        savefile += str(vals[i])
+                        if i < len(vals) - 1:
+                            savefile += ","'''
 
-                '''datanum = 0
-                while exists(os.path.dirname(__file__) + '/data/' + savefile):
-                    datanum += 1
-                savefile += '-' + str(datanum)'''
-                
-                try:
-                    savefile = str(a)[:3] + ',' + str(b)[:3] + ',' + str(c)[:3]
-                    print('SAVEFILE', savefile)
-                    print('CONSTANTS', consts)
-                    gather_data(consts, savefile)
-                except:
-                    print("ERROR")
-                    with open(os.path.dirname(__file__) + '/auto-data2/error-log.txt', 'w') as f:
-                        f.write(savefile + '\n')
-                        f.write(str(consts) + '\n')
-                        f.write('\n')
+                    '''datanum = 0
+                    while exists(os.path.dirname(__file__) + '/data/' + savefile):
+                        datanum += 1
+                    savefile += '-' + str(datanum)'''
+                    
+                    try:
+                        savefile = str(c1)[:3] + ',' + str(c2)[:3] + ',' + str(c3)[:3]
+                        print('SAVEFILE', savefile)
+                        print('CONSTANTS', consts)
+                        gather_data(consts, savefile)
+                    except:
+                        print("ERROR")
+                        with open(os.path.dirname(__file__) + '/data4/error-log.txt', 'w') as f:
+                            f.write(savefile + '\n')
+                            f.write(str(consts) + '\n')
+                            f.write('\n')
