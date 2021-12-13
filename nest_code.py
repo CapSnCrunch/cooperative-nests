@@ -10,16 +10,8 @@ import matplotlib.pyplot as plt
 # Ratio on the whole landscape
 # Ratio in inidividual colonies
 
-c1 = 1 # Ratio of mortality rates (dc / ds) (used in queen fights)
-ds = 0.6 # Mortality rate of solitary queens
-c2 = 0.1 # Ratio of interspecific competition ability (csc / ccs) (used in cluster fights)
-ccs = 0.8 # Interspecific competition ability of cooperative queens
-c3 = 1 # Ratio of reproductive capabilities (rs / rc) (used in reproduction)
-rc = 0.8 # Reproductive ability of cooperative queens
-sigma = 1 # Reproductive variance (sigma^2) (used in reproduction)
-
 K = 15
-m, n = 5, 5
+m, n = 7, 7
 qc0, qs0 = 50, 50
 
 # TODO Get rid of ratios (although they work for ODE, changing things like c1 will drastically change results)
@@ -30,16 +22,17 @@ qc0, qs0 = 50, 50
 
 # Wrap constants into a dictionary
 #consts = {'c1':0.99, 'ds':0.5, 'c2':c/(0.99*b), 'ccs':0.5*a, 'c3':1/b, 'rc':0.5, 'sigma':1}
-consts = {'c1':0.5, 'ds':0.38, 'c2':0.5, 'ccs':0.38, 'c3':0.5, 'rc':0.55, 'sigma':1}
-# c1 in [0.6, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
+#consts = {'c1':0.5, 'ds':0.38, 'c2':0.5, 'ccs':0.38, 'c3':0.5, 'rc':0.65, 'sigma':1}
+
+# c1 in [0.8, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
 # ds = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
 # c2 in [0.6, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
 # ccs = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
 # c3 in [0.6, 1] 'Ecological drivers ... ' (Brian Haney)
 # rc = 0.65 'Ecological drivers ... ' (Brian Haney)
 
-sims = 10 # Number of simulations to run and average
-gens = 200 # Number of generations to simulate
+sims = 30 # Number of simulations to run and average
+gens = 150 # Number of generations to simulate
 
 class Cluster():
     def __init__(self, i, j, consts):
@@ -54,10 +47,11 @@ class Cluster():
         xi += self.qc * (self.consts['ccs']) * (1 - self.consts['ds'] * self.consts['c1'])
         return -2.88 + 4.28 * xi - 0.377 * (xi ** 2)
 
-    def queen_fight(self, Cm = 5):
+    def queen_fight(self, Cm = 7):
         while (self.qc + self.qs) >= Cm:
-            self.qc = int(self.qc * (1 - self.consts['ds'] * self.consts['c1']))
             self.qs = int(self.qs * (1 - self.consts['ds']))
+            self.qc = int(self.qc * (1 - self.consts['ds'] * self.consts['c1']))
+            
 
 class Landscape():
     def __init__(self, K, m, n, consts):
@@ -91,10 +85,10 @@ class Landscape():
             cluster = self.clusters[new_position // self.n][new_position % self.n]
             if types.pop() == 1:
                 cluster.qs += 1
-                qs -= 1
+                #qs -= 1
             else:
                 cluster.qc += 1
-                qc -= 1
+                #qc -= 1
 
     def queen_count(self):
         '''Count the number of P (cooperative) and H (solitary) queens on the whole landscape'''
@@ -135,10 +129,10 @@ class Landscape():
         for row in self.clusters:
             for cluster in row:
                 while cluster.qc > 0:
-                    QC += max(0, np.random.normal(50 * self.consts['rc'], self.consts['sigma']))
+                    QC += max(0, np.random.normal(100 * self.consts['rc'], self.consts['sigma']))
                     cluster.qc -= 1
                 while cluster.qs > 0:
-                    QS += max(0, np.random.normal(50 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
+                    QS += max(0, np.random.normal(100 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
                     cluster.qs -= 1
         #print(QC, QS)
         self.create_queens(qc = int(QC), qs = int(QS))
@@ -149,8 +143,6 @@ def gather_data(consts, savefile):
     qs_count_average = []
 
     for i in range(sims):
-        #if i % 10 == 0:
-        #    print('Simulation', i)
         print('Simulation', i)
         land = Landscape(K = K, m = m, n = n, consts = consts)
         land.create_queens(qc = qc0, qs = qs0)
@@ -172,7 +164,7 @@ def gather_data(consts, savefile):
         qc_count_average.append(np.array(qc_counts))
         qs_count_average.append(np.array(qs_counts))
 
-    with open(os.path.dirname(__file__) + '/data3/' + savefile + '.dat', 'wb') as f:
+    with open(os.path.dirname(__file__) + '/data5/' + savefile + '.dat', 'wb') as f:
         pickle.dump(consts, f)
         pickle.dump(qc_count_average, f)
         pickle.dump(qs_count_average, f)
@@ -181,6 +173,7 @@ if __name__ == '__main__':
 
     ################# SIGNLE STEP SIMULATION #################
     run = False # Set to true if you want to see explicitly what is happening at each step of the simulation
+    consts = {'c1':1, 'ds':0.8, 'c2':1, 'ccs':0.5, 'c3':1, 'rc':0.5, 'sigma':1} # Set constants
 
     scale = 100
     if run:
@@ -232,8 +225,8 @@ if __name__ == '__main__':
                 qc = land.clusters[i][j].qc
                 qs = land.clusters[i][j].qs
                 if qc + qs > 0:
-                    win.blit(font.render('qc: ' + str(qc), False, (249, 115, 6)), ((i+0.3)*scale, (j+0.3)*scale))
-                    win.blit(font.render('qs: ' + str(qs), False, (3, 67, 223)), ((i+0.3)*scale, (j+0.5)*scale))
+                    win.blit(font.render('qc: ' + str(qc), False, (3, 67, 223)), ((i+0.3)*scale, (j+0.3)*scale))
+                    win.blit(font.render('qs: ' + str(qs), False, (249, 115, 6)), ((i+0.3)*scale, (j+0.5)*scale))
 
         win.blit(font.render('Generation: ' + str(generation), False, (0, 0, 0)), ((0.2)*scale, (n+0.2)*scale))
         if with_cluster_fights:
@@ -243,8 +236,14 @@ if __name__ == '__main__':
         win.blit(font.render('Q: ' + str(land.queen_count()), False, (0, 0, 0)), (3.7*scale, (n+0.2)*scale))
         pygame.display.update()
 
-    ################# RUN A SINGLE SIMULATION #################
-    if False:
+    ################# RUN A SINGLE SET OF CONSTANTS #################
+    if True:
+        
+        consts = {'c1':1, 'ds':0.4, 'c2':1, 'ccs':0.5, 'c3':1, 'rc':0.5, 'sigma':1} # Bistability (with rare coexistence)
+        #consts = {'c1':0.95, 'ds':0.38, 'c2':1, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1} # Bistability
+        #consts = {'c1':0.9, 'ds':0.38, 'c2':1, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1} # Cooperative wins
+        #consts = {'c1':1, 'ds':0.38, 'c2':0.9, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1}
+
         print('consts:', consts)
         qc_count_average = [] # Qc over time for each simulation
         qs_count_average = [] # Qs over time for each simulation
@@ -270,12 +269,33 @@ if __name__ == '__main__':
             
             qc_count_average.append(np.array(qc_counts))
             qs_count_average.append(np.array(qs_counts))
+            
+            '''plt.plot(np.arange(len(qc_counts)), qc_counts, label = 'Cooperative')
+            plt.plot(np.arange(len(qs_counts)), qs_counts, label = 'Solitary')
+            plt.xlabel('Generations')
+            plt.ylabel('Number of Queens')
+            plt.legend()
+            plt.show()'''
 
         qc_levels = []
         qs_levels = []
+        results = {'coexistence': 0, 'cooperative': 0, 'solitary': 0}
         for i in range(len(qc_count_average)):
-            qc_levels.append(np.mean(qc_count_average[i][-50:]))
-            qs_levels.append(np.mean(qs_count_average[i][-50:]))
+            qc_steady_state = np.mean(qc_count_average[i][-50:])
+            qs_steady_state = np.mean(qs_count_average[i][-50:])
+
+            qc_levels.append(qc_steady_state)
+            qs_levels.append(qs_steady_state)
+
+            if qc_steady_state > 0 and qs_steady_state > 0:
+                results['coexistence'] += 1
+                print('COEXISTENCE', qc_steady_state, qs_steady_state)
+            elif qc_steady_state > 0:
+                results['cooperative'] += 1
+            else:
+                results['solitary'] += 1
+
+        print(results)
 
         plt.plot(np.arange(len(qc_count_average[0])), np.mean(qc_count_average, axis = 0), label = 'Cooperative')
         plt.plot(np.arange(len(qs_count_average[0])), np.mean(qs_count_average, axis = 0), label = 'Solitary')
@@ -284,15 +304,23 @@ if __name__ == '__main__':
         plt.legend()
         plt.show()
 
+        plt.hist(qc_levels, 20, facecolor = 'blue', alpha = 0.5, label = 'Cooperative')
+        plt.title('Cooperative Quasi Steady State Distribution')
+        plt.show()
+
+        plt.hist(qs_levels, 20, facecolor = 'orange', alpha = 0.5, label = 'Solitary')
+        plt.title('Solitary Quasi Steady State Distribution')
+        plt.show()
+
     ################# GATHER DATA IN RANGE TO COMPARE WITH ODE MODEL #################
-    # ~2min per simulations
-    if True:
-        for c1 in np.linspace(0.6, 1.0, 4):
-            for c2 in np.linspace(0.6, 1, 4):
-                for c3 in np.linspace(0.6, 1, 4):
+    # ~2min per simulation
+    if False:
+        for c1 in np.linspace(0.9, 0.975, 4):
+            for c2 in np.linspace(0.9, 0.975, 4):
+                for c3 in np.linspace(0.9, 0.975, 4):
 
                     print()
-                    consts = {'c1':c1, 'ds':0.38, 'c2':c2, 'ccs':0.38, 'c3':c3, 'rc':0.65, 'sigma':1}
+                    consts = {'c1':c1, 'ds':0.38, 'c2':c2, 'ccs':0.38, 'c3':c3, 'rc':0.6, 'sigma':1}
 
                     '''savefile = ''
                     vals = [consts[c] for c in list(consts.keys())]
@@ -307,13 +335,13 @@ if __name__ == '__main__':
                     savefile += '-' + str(datanum)'''
                     
                     try:
-                        savefile = str(c1)[:3] + ',' + str(c2)[:3] + ',' + str(c3)[:3]
+                        savefile = str(c1) + ',' + str(c2) + ',' + str(c3)
                         print('SAVEFILE', savefile)
                         print('CONSTANTS', consts)
                         gather_data(consts, savefile)
                     except:
                         print("ERROR")
-                        with open(os.path.dirname(__file__) + '/data4/error-log.txt', 'w') as f:
+                        with open(os.path.dirname(__file__) + '/data5/error-log.txt', 'w') as f:
                             f.write(savefile + '\n')
                             f.write(str(consts) + '\n')
                             f.write('\n')

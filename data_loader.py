@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-a = 3.0 # ccs / ds     a in [0.5, 2.0]
+a = 1.0 # ccs / ds     a in [0.5, 2.0]
 b = 1.0 # 1 / c3       b in (1.5, 3.0]
 c = 2.0 # c1c2 / c3    c in [0.5, 2.0]
 
@@ -14,49 +14,56 @@ c = 2.0 # c1c2 / c3    c in [0.5, 2.0]
 # 2 2 1, 1 2 3  blue wins
 # 3 1 1, 3 1 2, 2 1 1, 1 1 1 bistability
 
-#for a in np.linspace(1, 3, 3):
-#    for b in np.linspace(1, 3, 3):
-#        for c in np.linspace(1, 3, 3):
+for a in [0.8, 0.9, 1.0]:
+    for b in [0.8, 0.9, 1.0]:
+        for c in [0.8, 0.9, 1.0]:
 
-save_file = str(a) + ',' + str(b) + ',' + str(c) + '.dat' # Specify which file we want to load
-print(save_file)
+            save_file = str(a) + ',' + str(b) + ',' + str(c) + '.dat' # Specify which file we want to load
 
-data = [] # Data saved as consts, qccounts, qscounts
-with open(os.path.dirname(__file__) + '/data/' + save_file, 'rb') as f:
-    while True:
-        try:
-            data.append(pickle.load(f))
-        except EOFError:
-            break
+            data = [] # Data saved as consts, qccounts, qscounts
+            with open(os.path.dirname(__file__) + '/data5/' + save_file, 'rb') as f:
+                while True:
+                    try:
+                        data.append(pickle.load(f))
+                    except EOFError:
+                        break
 
-consts, qccounts, qscounts = data
+            consts, qccounts, qscounts = data
 
-print(consts)
+            qclevels = []
+            qslevels = []
+            results = {'coexistence': 0, 'cooperative': 0, 'solitary': 0}
+            for i in range(len(qccounts)):
+                qc_steady_state = np.mean(qccounts[i][-50:])
+                qs_steady_state = np.mean(qscounts[i][-50:])
 
-qclevels = []
-qslevels = []
-for i in range(len(qccounts)):
-    qclevels.append(np.mean(qccounts[i][-50:]))
-    qslevels.append(np.mean(qscounts[i][-50:]))
+                qclevels.append(qc_steady_state)
+                qslevels.append(qs_steady_state)
 
-plt.plot(np.arange(len(qccounts[0])), np.mean(qccounts, axis = 0), label = 'Cooperative')
-plt.plot(np.arange(len(qscounts[0])), np.mean(qscounts, axis = 0), label = 'Solitary')
-plt.xlabel('Generations')
-plt.ylabel('Number of Queens')
-plt.legend()
-plt.show()
+                if qc_steady_state > 0 and qs_steady_state > 0:
+                    results['coexistence'] += 1
+                    print('COEXISTENCE', qc_steady_state, qs_steady_state)
+                elif qc_steady_state > 0:
+                    results['cooperative'] += 1
+                else:
+                    results['solitary'] += 1
 
-#plt.scatter(qclevels, np.arange(50), label = 'Cooperative')
-#plt.scatter(qslevels, np.arange(50), label = 'Solitary')
-#plt.show()
+            '''plt.plot(np.arange(len(qccounts[0])), np.mean(qccounts, axis = 0), label = 'Cooperative')
+            plt.plot(np.arange(len(qscounts[0])), np.mean(qscounts, axis = 0), label = 'Solitary')
+            plt.xlabel('Generations')
+            plt.ylabel('Number of Queens')
+            plt.legend()
+            plt.show()'''
 
-'''plt.hist(qclevels, 10, facecolor = 'blue', alpha = 0.5, label = 'Cooperative')
+print(results)
+
+plt.hist(qclevels, 10, facecolor = 'blue', alpha = 0.5, label = 'Cooperative')
 plt.title('Cooperative Quasi Steady State Distribution')
 plt.show()
 
 plt.hist(qslevels, 10, facecolor = 'orange', alpha = 0.5, label = 'Solitary')
 plt.title('Solitary Quasi Steady State Distribution')
-plt.show()'''
+plt.show()
 
 '''fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
