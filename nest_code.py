@@ -25,14 +25,14 @@ qc0, qs0 = 50, 50
 #consts = {'c1':0.5, 'ds':0.38, 'c2':0.5, 'ccs':0.38, 'c3':0.5, 'rc':0.65, 'sigma':1}
 
 # c1 in [0.8, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
-# ds = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
-# c2 in [0.6, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
-# ccs = 0.38 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
-# c3 in [0.6, 1] 'Ecological drivers ... ' (Brian Haney)
-# rc = 0.65 'Ecological drivers ... ' (Brian Haney)
+# ds = 0.4 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1]
+# c2 in [0.8, 1] 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
+# ccs = 0.4 'Social dynamics drive ... ' (Jennifer Fewell) [Figure 1, Table 2 (no sig diff from P on its own)]
+# c3 in [0.8, 1] 'Ecological drivers ... ' (Brian Haney)
+# rc = 0.6 'Ecological drivers ... ' (Brian Haney)
 
-sims = 30 # Number of simulations to run and average
-gens = 150 # Number of generations to simulate
+sims = 50 # Number of simulations to run and average
+gens = 200 # Number of generations to simulate
 
 class Cluster():
     def __init__(self, i, j, consts):
@@ -129,10 +129,10 @@ class Landscape():
         for row in self.clusters:
             for cluster in row:
                 while cluster.qc > 0:
-                    QC += max(0, np.random.normal(100 * self.consts['rc'], self.consts['sigma']))
+                    QC += max(0, np.random.normal(5 * self.consts['rc'], self.consts['sigma']))
                     cluster.qc -= 1
                 while cluster.qs > 0:
-                    QS += max(0, np.random.normal(100 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
+                    QS += max(0, np.random.normal(5 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
                     cluster.qs -= 1
         #print(QC, QS)
         self.create_queens(qc = int(QC), qs = int(QS))
@@ -164,7 +164,7 @@ def gather_data(consts, savefile):
         qc_count_average.append(np.array(qc_counts))
         qs_count_average.append(np.array(qs_counts))
 
-    with open(os.path.dirname(__file__) + '/data5/' + savefile + '.dat', 'wb') as f:
+    with open(os.path.dirname(__file__) + savefile + '.dat', 'wb') as f:
         pickle.dump(consts, f)
         pickle.dump(qc_count_average, f)
         pickle.dump(qs_count_average, f)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     ################# SIGNLE STEP SIMULATION #################
     run = False # Set to true if you want to see explicitly what is happening at each step of the simulation
-    consts = {'c1':1, 'ds':0.8, 'c2':1, 'ccs':0.5, 'c3':1, 'rc':0.5, 'sigma':1} # Set constants
+    consts = {'c1':0.975, 'ds':0.5, 'c2':1, 'ccs':0.5, 'c3':0.9, 'rc':0.5, 'sigma':1} # Set constants
 
     scale = 100
     if run:
@@ -182,11 +182,11 @@ if __name__ == '__main__':
         pygame.font.init()
         font = pygame.font.SysFont('Calibri', int(scale / 5))
 
-    land = Landscape(K = K, m = m, n = n, consts = consts)
-    land.create_queens(qc = qc0, qs = qs0)
+        land = Landscape(K = K, m = m, n = n, consts = consts)
+        land.create_queens(qc = qc0, qs = qs0)
 
-    with_cluster_fights = True
-    step = 0 # 0: queen fight, 1: cluster fight, 2: reproduce
+        with_cluster_fights = True
+        step = 0 # 0: queen fight, 1: cluster fight, 2: reproduce
 
     generation = 0
     while run:
@@ -237,9 +237,9 @@ if __name__ == '__main__':
         pygame.display.update()
 
     ################# RUN A SINGLE SET OF CONSTANTS #################
-    if True:
+    if False:
         
-        consts = {'c1':1, 'ds':0.4, 'c2':1, 'ccs':0.5, 'c3':1, 'rc':0.5, 'sigma':1} # Bistability (with rare coexistence)
+        consts = {'c1':0.975, 'ds':0.5, 'c2':1, 'ccs':0.5, 'c3':1, 'rc':0.5, 'sigma':1} # Bistability (with rare coexistence)
         #consts = {'c1':0.95, 'ds':0.38, 'c2':1, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1} # Bistability
         #consts = {'c1':0.9, 'ds':0.38, 'c2':1, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1} # Cooperative wins
         #consts = {'c1':1, 'ds':0.38, 'c2':0.9, 'ccs':0.38, 'c3':1, 'rc':0.6, 'sigma':1}
@@ -314,34 +314,22 @@ if __name__ == '__main__':
 
     ################# GATHER DATA IN RANGE TO COMPARE WITH ODE MODEL #################
     # ~2min per simulation
-    if False:
-        for c1 in np.linspace(0.9, 0.975, 4):
-            for c2 in np.linspace(0.9, 0.975, 4):
-                for c3 in np.linspace(0.9, 0.975, 4):
+    if True:
+        for c1 in np.linspace(0, 1, 6):
+            for c2 in np.linspace(0, 1, 6):
+                for c3 in np.linspace(0, 1, 6):
 
                     print()
-                    consts = {'c1':c1, 'ds':0.38, 'c2':c2, 'ccs':0.38, 'c3':c3, 'rc':0.6, 'sigma':1}
+                    consts = {'c1':c1, 'ds':0.5, 'c2':c2, 'ccs':0.5, 'c3':c3, 'rc':5, 'sigma':1}
 
-                    '''savefile = ''
-                    vals = [consts[c] for c in list(consts.keys())]
-                    for i in range(len(vals)):
-                        savefile += str(vals[i])
-                        if i < len(vals) - 1:
-                            savefile += ","'''
-
-                    '''datanum = 0
-                    while exists(os.path.dirname(__file__) + '/data/' + savefile):
-                        datanum += 1
-                    savefile += '-' + str(datanum)'''
-                    
                     try:
-                        savefile = str(c1) + ',' + str(c2) + ',' + str(c3)
+                        savefile = '/data10/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
                         print('SAVEFILE', savefile)
                         print('CONSTANTS', consts)
                         gather_data(consts, savefile)
                     except:
                         print("ERROR")
-                        with open(os.path.dirname(__file__) + '/data5/error-log.txt', 'w') as f:
+                        with open(os.path.dirname(__file__) + '/error-log.txt', 'w') as f:
                             f.write(savefile + '\n')
                             f.write(str(consts) + '\n')
                             f.write('\n')
