@@ -315,15 +315,15 @@ if __name__ == '__main__':
     ################# GATHER DATA IN RANGE TO COMPARE WITH ODE MODEL #################
     # ~2min per simulation
     if True:
-        for c1 in np.linspace(0.2, 0.4, 5):
-            for c2 in np.linspace(0.8, 1, 5):
-                for c3 in np.linspace(0.4, 0.8, 5):
+        for c1 in np.linspace(0.1, 1, 5):
+            for c2 in np.linspace(0.1, 1, 5):
+                for c3 in np.linspace(0.1, 1, 5):
 
                     print()
                     consts = {'c1':c1, 'ds':0.6, 'c2':c2, 'ccs':1.0, 'c3':c3, 'rc':20, 'sigma':1}
 
                     try:
-                        savefile = '/data10/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
+                        savefile = '/data-full-range/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
                         print('SAVEFILE', savefile)
                         print('CONSTANTS', consts)
                         gather_data(consts, savefile)
