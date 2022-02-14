@@ -16,6 +16,7 @@ c = 2.0 # c1c2 / c3    c in [0.5, 2.0]
 # 3 1 1, 3 1 2, 2 1 1, 1 1 1 bistability
 
 # data8 is good for 3D charts
+# to view proportions, make sure you change constc2, constc3 and labels
 
 c1vals = []
 c2vals = []
@@ -30,14 +31,14 @@ proportions = {'coexistence' : [], 'cooperative' : [], 'solitary' : []}
 constc2 = 0.925
 constc3 = 0.975
 
-for a in np.linspace(0.925, 1, 4):
-    for b in np.linspace(0.925, 1, 4):
-        for c in np.linspace(0.925, 1, 4):
+for a in np.linspace(0.2, 0.4, 5):
+    for b in np.linspace(0.8, 1, 5):
+        for c in np.linspace(0.4, 0.8, 5):
 
-            save_file = str(a) + ',' + str(b) + ',' + str(c) + '.dat' # Specify which file we want to load
+            save_file = str(round(a, 2)) + ',' + str(round(b, 2)) + ',' + str(round(c, 2)) + '.dat' # Specify which file we want to load
 
             data = [] # Data saved as consts, qccounts, qscounts
-            with open(os.path.dirname(__file__) + '/data8/' + save_file, 'rb') as f:
+            with open(os.path.dirname(__file__) + '/data-dillon/' + save_file, 'rb') as f:
                 while True:
                     try:
                         data.append(pickle.load(f))
@@ -97,6 +98,7 @@ print(consts)
 
 print(proportions)
 labels = ['0.925', '0.95', '0.975', '1.0']
+labels = ['1', '2', '3', '4', '5']
 width = 0.3
 fig, ax = plt.subplots()
 ax.bar(labels, proportions['cooperative'], width, label='Cooperative')

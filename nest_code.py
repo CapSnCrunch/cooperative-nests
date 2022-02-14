@@ -129,10 +129,10 @@ class Landscape():
         for row in self.clusters:
             for cluster in row:
                 while cluster.qc > 0:
-                    QC += max(0, np.random.normal(5 * self.consts['rc'], self.consts['sigma']))
+                    QC += max(0, np.random.normal(self.consts['rc'], self.consts['sigma']))
                     cluster.qc -= 1
                 while cluster.qs > 0:
-                    QS += max(0, np.random.normal(5 * self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
+                    QS += max(0, np.random.normal(self.consts['rc'] * self.consts['c3'], self.consts['sigma']))
                     cluster.qs -= 1
         #print(QC, QS)
         self.create_queens(qc = int(QC), qs = int(QS))
@@ -315,12 +315,12 @@ if __name__ == '__main__':
     ################# GATHER DATA IN RANGE TO COMPARE WITH ODE MODEL #################
     # ~2min per simulation
     if True:
-        for c1 in np.linspace(0.1, 1, 6):
-            for c2 in np.linspace(0.1, 1, 6):
-                for c3 in np.linspace(0.1, 1, 6):
+        for c1 in np.linspace(0.2, 0.4, 5):
+            for c2 in np.linspace(0.8, 1, 5):
+                for c3 in np.linspace(0.4, 0.8, 5):
 
                     print()
-                    consts = {'c1':c1, 'ds':0.5, 'c2':c2, 'ccs':0.5, 'c3':c3, 'rc':5, 'sigma':1}
+                    consts = {'c1':c1, 'ds':0.6, 'c2':c2, 'ccs':1.0, 'c3':c3, 'rc':20, 'sigma':1}
 
                     try:
                         savefile = '/data10/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
