@@ -45,6 +45,7 @@ class Cluster():
     def potential(self):
         xi = self.qs * (self.consts['c2'] * self.consts['ccs']) * (1 - self.consts['ds'])
         xi += self.qc * (self.consts['ccs']) * (1 - self.consts['ds'] * self.consts['c1'])
+        # TODO make this linear
         return -2.88 + 4.28 * xi - 0.377 * (xi ** 2)
 
     def queen_fight(self, Cm = 7):
@@ -323,7 +324,7 @@ if __name__ == '__main__':
                     consts = {'c1':c1, 'ds':0.6, 'c2':c2, 'ccs':1.0, 'c3':c3, 'rc':20, 'sigma':1}
 
                     try:
-                        savefile = '/data-full-range/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
+                        savefile = '/data-sets/data-full-range/' + str(round(c1, 2)) + ',' + str(round(c2, 2)) + ',' + str(round(c3, 2))
                         print('SAVEFILE', savefile)
                         print('CONSTANTS', consts)
                         gather_data(consts, savefile)

@@ -38,7 +38,7 @@ for a in np.linspace(0.2, 0.4, 5):
             save_file = str(round(a, 2)) + ',' + str(round(b, 2)) + ',' + str(round(c, 2)) + '.dat' # Specify which file we want to load
 
             data = [] # Data saved as consts, qccounts, qscounts
-            with open(os.path.dirname(__file__) + '/data-dillon/' + save_file, 'rb') as f:
+            with open(os.path.dirname(__file__) + '/data-sets/data-dillon/' + save_file, 'rb') as f:
                 while True:
                     try:
                         data.append(pickle.load(f))
@@ -96,18 +96,18 @@ print(consts)
 # plt.title('Solitary Quasi Steady State Distribution')
 # plt.show()
 
-print(proportions)
-labels = ['0.925', '0.95', '0.975', '1.0']
-labels = ['1', '2', '3', '4', '5']
-width = 0.3
-fig, ax = plt.subplots()
-ax.bar(labels, proportions['cooperative'], width, label='Cooperative')
-ax.bar(labels, proportions['solitary'], width, bottom = proportions['cooperative'], label='Solitary')
-ax.bar(labels, proportions['coexistence'], width, bottom = list(map(add, proportions['cooperative'], proportions['solitary'])), label='Coexistence')
-ax.set_xlabel('c1')
-ax.set_title(f'Proportion of Cases for c2 = {constc2} and c3 = {constc3}')
-ax.legend()
-plt.show()
+# print(proportions)
+# labels = ['0.925', '0.95', '0.975', '1.0']
+# labels = ['1', '2', '3', '4', '5']
+# width = 0.3
+# fig, ax = plt.subplots()
+# ax.bar(labels, proportions['cooperative'], width, label='Cooperative')
+# ax.bar(labels, proportions['solitary'], width, bottom = proportions['cooperative'], label='Solitary')
+# ax.bar(labels, proportions['coexistence'], width, bottom = list(map(add, proportions['cooperative'], proportions['solitary'])), label='Coexistence')
+# ax.set_xlabel('c1')
+# ax.set_title(f'Proportion of Cases for c2 = {constc2} and c3 = {constc3}')
+# ax.legend()
+# plt.show()
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
