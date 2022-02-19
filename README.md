@@ -13,10 +13,15 @@ This is the code repository for the research project on Cooperative Nest Foundin
 ## nest_code.py
 This is the main program in this repository. If you scroll, you will see a section titled SINGLE STEP SIMULATION. Setting the variable run to true
 will allow you to view indidivdual steps of the simulation in great detail by pressing space. When gathering data, we want run set to false though.
+Do the same for RUN A SINGLE SET OF CONSTANTS.
 
-Under the section GATHER 3D DATA, there are a three for loops for variables a (c_cs / d_s), b (1 / c_3), and c (c_1 c_2 / c_3). The three numbers in
-the range represent the start, stop, and step values of the intervals we want to run these ratios over. This process will take about 2 minutes per
-data coordinate so keeping the step values low is advised. Running the program will save simulation data for each coordinate to the auto-data folder.
+Under the section GATHER 3D DATA, there are a three for loops for variables c1, c2, and c3. Setup the linspace according to the values you would like to run.
+I suggest keeping these within [0.1, 1] and having less that 6 steps. This process will take a minute or so per coordinate so expect the collection to take around
+half an hour to an hour depending on your particular setup. 
+
+After changing the ranges, you can edit the particular constants to run the simulation with in the consts dictionary. Also be sure to create a new folder in
+data-sets to store your data in and edit the savefile to be '/data-sets/<FOLDER NAME>' + ...
+Running the program will then automatically save simulation data for each coordinate to the auto-data folder.
 
 NOTE: Unless you create a new folder and change the savefile variable accordingly, you will overwrite the existing data in the folder.
 
