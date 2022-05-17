@@ -31,7 +31,7 @@ Running the program will then automatically save simulation data for each coordi
 
 NOTE: Unless you create a new folder and change the savefile variable accordingly, you will overwrite the existing data in the folder.
 
-## data_viewer.py
+## data_loader.py
 Once your data is gathered from nest_code.py, you can produce figures using data_loader.py. To set this up, do the following:
    1) Setup the linspaces for c1, c2, and c3 so that they match the ranges you ran your dataset with.
       (Note: For most of the datasets, I've already saved a README.txt you can check for these)
